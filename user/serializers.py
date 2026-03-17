@@ -4,6 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password 
 from django.contrib.auth.hashers import check_password
 from .models import User
+from django.contrib.auth import authenticate
 
 #create serializer class for user model
 #model serializer automatically creates fields 
@@ -29,15 +30,20 @@ class LoginSerializer(serializers.Serializer): #serializer for login endpoint
     def validate(self, data):
         username = data.get('username')
         password = data.get('password')
+                
+        # Authenticate user
+        user = authenticate(username=username, password=password)
 
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            raise serializers.ValidationError({"username": "No account found with this username."})
+        if user is None:
+            raise serializers.ValidationError({
+                "detail": "Invalid username or password."
+            })
 
-        if not check_password(password, user.password):
-            raise serializers.ValidationError({"password": "Invalid password"})
-
+        if  user.role != "USER":
+            raise serializers.ValidationError({
+                "detail": "Access denied. Admin users cannot log in through this endpoint."
+            })
+                       
         data['user'] = user
         return data        
             
