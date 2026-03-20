@@ -41,7 +41,7 @@ class LoginSerializer(serializers.Serializer): #serializer for login endpoint
 
         if  user.role != "USER":
             raise serializers.ValidationError({
-                "detail": "Access denied. Admin users cannot log in through this endpoint."
+                "detail": "Access denied for admin users."
             })
                        
         data['user'] = user
