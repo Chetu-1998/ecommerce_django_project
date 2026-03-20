@@ -5,6 +5,9 @@ from .serializers import UserSerializer, LoginSerializer
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.contrib.auth import login, logout
 
 
 @api_view(['POST'])
@@ -36,55 +39,110 @@ def register_user(request):
     )
 
 
-@api_view(['POST'])
+# @api_view(['POST'])
+# def login_user(request):
+#     serializer = LoginSerializer(data=request.data)
+
+#     if serializer.is_valid():
+#         user = serializer.validated_data['user']
+
+#         refresh = RefreshToken.for_user(user)
+
+#         return Response(
+#             {
+#                 "access_token": str(refresh.access_token),
+#                 "refresh_token": str(refresh)
+#             },
+#             status=status.HTTP_200_OK
+#         )
+
+#     return Response(
+#         {
+#             "message": "Login failed",
+#             "errors": serializer.errors
+#         },
+#         status=status.HTTP_400_BAD_REQUEST
+#     )
+
+@api_view(['GET', 'POST'])
 def login_user(request):
-    serializer = LoginSerializer(data=request.data)
+    if request.method == 'GET':
+        return render(request, 'user/login.html')
+
+    is_json = request.content_type == 'application/json'
+
+    data = request.data if is_json else request.POST
+    serializer = LoginSerializer(data=data)
 
     if serializer.is_valid():
         user = serializer.validated_data['user']
 
+        login(request, user)
+
         refresh = RefreshToken.for_user(user)
 
+        if is_json:
+            return Response(
+                {
+                    "access_token": str(refresh.access_token),
+                    "refresh_token": str(refresh)
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return redirect('user_dashboard')
+
+    if is_json:
         return Response(
             {
-                "access_token": str(refresh.access_token),
-                "refresh_token": str(refresh)
+                "message": "Login failed",
+                "errors": serializer.errors
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_400_BAD_REQUEST
         )
 
-    return Response(
-        {
-            "message": "Login failed",
-            "errors": serializer.errors
-        },
-        status=status.HTTP_400_BAD_REQUEST
+    return render(
+        request,
+        'user/login.html',
+        {"errors": serializer.errors}
     )
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def user_logout(request):
-    try:
-        # get refresh token from request body
-        refresh_token = request.data["refresh_token"]
 
-        if not refresh_token:
+    try:
+        is_json = request.content_type and 'application/json' in request.content_type
+
+        refresh_token = (
+            request.data.get("refresh_token")
+            if is_json else request.POST.get("refresh_token")
+        )
+
+        logout(request)
+
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+        if is_json:
             return Response(
-                {"message": "Refresh token is required"},
+                {"message": "Logout successful"},
+                status=status.HTTP_200_OK
+            )
+
+        return redirect('login_user')
+
+    except Exception as e:
+        if 'application/json' in request.content_type:
+            return Response(
+                {"message": "Logout failed", "error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        token = RefreshToken(refresh_token)
-        token.blacklist()
+        return redirect('login_user')
 
-        return Response(
-            {"message": "Logout successful"},
-            status=status.HTTP_205_RESET_CONTENT
-        )
 
-    except Exception as e:
-        return Response(
-            {"message": "Logout failed", "error": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+@login_required
+def user_dashboard(request):
+    return render(request, 'user/dashboard.html')
