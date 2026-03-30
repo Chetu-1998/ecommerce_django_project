@@ -1,8 +1,7 @@
 from django.urls import include, path
-
 from . import views
 
 urlpatterns = [
-    # path("", views.index, name="index"),
-    path('', views.admin_list, name='admin_list'),
+    path('login/', views.admin_login, name='admin_login'),
+    path('viewusers/', views.viewUsers, name='viewUsers')
 ]

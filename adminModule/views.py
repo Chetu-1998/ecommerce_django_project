@@ -1,41 +1,37 @@
-from django.http import JsonResponse
-from .models import AdminModule
-import json
+from django.contrib.auth import authenticate, get_user_model
+from rest_framework.decorators import api_view, permission_classes
+from productModule.permissions import IsAdminUserRole
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from user.serializers import UserSerializer
 
+@api_view(['POST'])
+def admin_login(request):
+    username = request.data.get("username")
+    password = request.data.get("password")
 
-# GET all admins / POST create admin
-def admin_list(request):
+    user = authenticate(username=username, password=password)
 
-    if request.method == "GET":
-        admins = AdminModule.objects.all()
+    if user is None:
+        return Response({"error": "Invalid credentials"}, status=400)
 
-        data = []
-        for admin in admins:
-            data.append({
-                "id": admin.id,
-                "name": admin.name,
-                "age": admin.age
-            })
+    if user.role != 'ADMIN':
+        return Response({"error": "Only admin can login here"}, status=403)
 
-        return JsonResponse({
-            "status": True,
-            "message": "Admins fetched successfully",
-            "data": data
-        })
+    refresh = RefreshToken.for_user(user)
 
-
-    elif request.method == "POST":
-        body = json.loads(request.body)
-
-        admin = AdminModule.objects.create(
-            name=body.get("name"),
-            age=body.get("age")
-        )
-
-        return JsonResponse({
-            "status": True,
-            "message": "Admin created successfully",
-            "id": admin.id
-        })
-
-        
+    return Response({
+        "access_token": str(refresh.access_token),
+    })
+    
+    
+@api_view(['GET'])
+@permission_classes([IsAdminUserRole])
+def viewUsers(request):
+    User = get_user_model()  # return active user model
+    print(User, "User")
+    users = User.objects.exclude(role='ADMIN')
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
