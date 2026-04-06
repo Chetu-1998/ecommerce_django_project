@@ -49,9 +49,12 @@ INSTALLED_APPS = [
     'cartModule',
     'orderModule',
     'productModule',
+    'corsheaders',
+
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -75,6 +78,8 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'user.User'
 
 ROOT_URLCONF = 'EcommerceBackend.urls'
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 TEMPLATES = [
     {
