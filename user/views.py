@@ -85,7 +85,14 @@ def login_user(request):
             return Response(
                 {
                     "access_token": str(refresh.access_token),
-                    # "refresh_token": str(refresh)
+                    "user": {
+                        "id": user.id,
+                        "username": user.username,
+                        "email": user.email,
+                        "role": user.role
+                    },                    
+                    
+                    "refresh_token": str(refresh)
                 },
                 status=status.HTTP_200_OK
             )

@@ -19,7 +19,12 @@ def addProduct(request):
 
 @api_view(['GET'])
 def viewProducts(request):
-    products = ProductModule.objects.all()
+    category = request.GET.get('category')
+    if category:
+        products = ProductModule.objects.filter(category__name__iexact=category)
+    else:
+        products = ProductModule.objects.all()
+
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
 
