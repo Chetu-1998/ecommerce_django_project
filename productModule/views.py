@@ -21,7 +21,8 @@ def addProduct(request):
 def viewProducts(request):
     category = request.GET.get('category')
     if category:
-        products = ProductModule.objects.filter(category__name__iexact=category)
+        products = ProductModule.objects.filter(
+            category__name__iexact=category)
     else:
         products = ProductModule.objects.all()
 
@@ -114,3 +115,13 @@ def updateCategory(request, id):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def viewCategory(request, id):
+    try:
+        category = Category.objects.get(id=id)
+        serializer = CategorySerializer(category)
+        return Response(serializer.data)
+    except Category.DoesNotExist:
+        return Response({"message": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
