@@ -82,8 +82,22 @@ def placeOrder(request):
 
 @api_view(['GET'])
 def viewOrders(request):
-    orders = OrderModule.objects.all().order_by('-created_at') 
+    orders = OrderModule.objects.all().order_by('-created_at')
     serializer = OrderModuleSerializer(orders, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def myOrders(request):
+    user = request.user
+
+    orders = OrderModule.objects.filter(
+        user=user
+    ).order_by('-created_at')
+
+    serializer = OrderModuleSerializer(orders, many=True)
+
     return Response(serializer.data)
 
 

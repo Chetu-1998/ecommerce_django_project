@@ -20,7 +20,28 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderModuleSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
 
+    user = serializers.SerializerMethodField()
+
     class Meta:
         model = OrderModule
-        fields = ['id', 'total_amount', 'status', 'created_at', 'items']
-        read_only_fields = ['total_amount', 'status', 'created_at']
+        fields = [
+            'id',
+            'user',
+            'total_amount',
+            'status',
+            'created_at',
+            'items'
+        ]
+
+        read_only_fields = [
+            'total_amount',
+            'status',
+            'created_at'
+        ]
+
+    def get_user(self, obj):
+        return {
+            "id": obj.user.id,
+            "name": obj.user.username,
+            "email": obj.user.email
+        }
