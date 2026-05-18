@@ -5,7 +5,7 @@ from productModule.models import ProductModule
 
 STATUS_CHOICES = [
     ('PENDING', 'Pending'),
-    ('COMPLETED', 'Completed'),
+    ('DELIVERED', 'Delivered'),
     ('CANCELLED', 'Cancelled'),
 ]
 

@@ -114,3 +114,18 @@ def deleteOrders(request):
     return Response({
         "message": f"{count} orders deleted successfully"
     })
+
+
+@api_view(['PATCH'])
+def updateOrder(request, id):
+    try:
+        order = OrderModule.objects.get(id=id)
+    except OrderModule.DoesNotExist:
+        return Response({"error": "Order not found"}, status=404)
+
+    serializer = OrderModuleSerializer(order, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+
+    return Response(serializer.errors, status=400)

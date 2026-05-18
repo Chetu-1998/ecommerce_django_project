@@ -35,7 +35,6 @@ class OrderModuleSerializer(serializers.ModelSerializer):
 
         read_only_fields = [
             'total_amount',
-            'status',
             'created_at'
         ]
 
